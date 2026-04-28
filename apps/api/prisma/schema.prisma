@@ -1,0 +1,107 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+enum ProductType {
+    READY_TO_EAT
+    RAW_MARINATED
+    RAW_SUNDRIED
+}
+
+enum DeliveryRound {
+    MORNING
+    AFTERNOON
+    NEXT_DAY
+}
+
+enum OrderStatus {
+    NEW
+    PREPARING
+    DELIVERING
+    DONE
+    CANCELLED
+}
+
+enum UserRole {
+    CUSTOMER
+    ADMIN
+}
+
+model User {
+    id        String   @id @default(uuid())
+    email     String   @unique
+    name      String?
+    role      UserRole @default(CUSTOMER)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    orders Order[]
+}
+
+model Product {
+    id          String      @id @default(uuid())
+    name        String
+    slug        String      @unique
+    description String
+    imageUrl    String
+    price       Int
+    type        ProductType
+    isActive    Boolean     @default(true)
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+
+    orderItems OrderItem[]
+}
+
+model Order {
+    id              String      @id @default(uuid())
+    customerName    String
+    customerPhone   String
+    customerAddress String
+
+    userId          String?
+    deliveryRound   DeliveryRound
+    deliveryDate    DateTime
+    deliveryText    String
+
+    status          OrderStatus @default(NEW)
+    totalAmount     Int
+
+    createdAt       DateTime    @default(now())
+    updatedAt       DateTime    @updatedAt
+
+    user            User?       @relation(fields: [userId], references: [id])
+    items OrderItem[]
+
+    @@index([status])
+    @@index([deliveryRound])
+    @@index([deliveryDate])
+    @@index([createdAt])
+}
+
+model OrderItem {
+    id        String  @id @default(uuid())
+    orderId   String
+    productId String
+    quantity  Int
+    unitPrice Int
+    subtotal  Int
+
+    order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+    product   Product @relation(fields: [productId], references: [id])
+
+    @@index([orderId])
+    @@index([productId])
+}
+
+model AdminPushToken {
+    id        String   @id @default(uuid())
+    token     String   @unique
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
