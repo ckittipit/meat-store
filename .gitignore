@@ -27,3 +27,6 @@ apps/api/prisma/dev.db
 
 # docker
 docker-data
+
+# uploaded files
+apps/api/uploads
