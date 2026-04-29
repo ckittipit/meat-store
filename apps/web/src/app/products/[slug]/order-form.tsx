@@ -254,7 +254,16 @@ export function OrderForm({ product }: OrderFormProps) {
                 {createdOrder && (
                     <div className="rounded-2xl border border-green-100 bg-green-50 px-4 py-4 text-sm text-green-800">
                         <p className="font-semibold">สั่งซื้อสำเร็จ</p>
+
+                        {createdOrder.items.map((item) => (
+                            <p key={item.id} className="mt-1">
+                                {item.productName} {item.variantLabel} x{' '}
+                                {item.quantity}
+                            </p>
+                        ))}
+
                         <p className="mt-1">{createdOrder.deliveryText}</p>
+
                         <p className="mt-1">
                             ยอดรวม{' '}
                             {createdOrder.totalAmount.toLocaleString('th-TH')}{' '}
