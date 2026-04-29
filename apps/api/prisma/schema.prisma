@@ -12,6 +12,12 @@ enum ProductType {
     RAW_SUNDRIED
 }
 
+enum ProductSize {
+    SIZE_100G
+    SIZE_500G
+    SIZE_1KG
+}
+
 enum DeliveryRound {
     MORNING
     AFTERNOON
@@ -54,7 +60,26 @@ model Product {
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @updatedAt
 
+    variants   ProductVariant[]
     orderItems OrderItem[]
+}
+
+model ProductVariant {
+    id        String      @id @default(uuid())
+    productId String
+    size      ProductSize
+    label     String
+    grams     Int
+    price     Int
+    isActive  Boolean     @default(true)
+    createdAt DateTime    @default(now())
+    updatedAt DateTime    @updatedAt
+
+    product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+    orderItems OrderItem[]
+
+    @@unique([productId, size])
+    @@index([productId])
 }
 
 model Order {
@@ -75,7 +100,7 @@ model Order {
     updatedAt       DateTime    @updatedAt
 
     user            User?       @relation(fields: [userId], references: [id])
-    items OrderItem[]
+    items           OrderItem[]
 
     @@index([status])
     @@index([deliveryRound])
@@ -84,18 +109,26 @@ model Order {
 }
 
 model OrderItem {
-    id        String  @id @default(uuid())
-    orderId   String
-    productId String
+    id               String  @id @default(uuid())
+    orderId          String
+    productId        String
+    productVariantId String
+
+    productName      String
+    variantLabel     String
+    variantGrams     Int
+
     quantity  Int
     unitPrice Int
     subtotal  Int
 
-    order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-    product   Product @relation(fields: [productId], references: [id])
+    order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+    product          Product        @relation(fields: [productId], references: [id])
+    productVariant   ProductVariant @relation(fields: [productVariantId], references: [id])
 
     @@index([orderId])
     @@index([productId])
+    @@index([productVariantId])
 }
 
 model AdminPushToken {

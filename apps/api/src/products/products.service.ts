@@ -1,10 +1,10 @@
 import {
-    Injectable,
     ConflictException,
+    Injectable,
     NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma, ProductSize } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
@@ -17,6 +17,16 @@ export class ProductsService {
             where: {
                 isActive: true,
             },
+            include: {
+                variants: {
+                    where: {
+                        isActive: true,
+                    },
+                    orderBy: {
+                        grams: 'asc',
+                    },
+                },
+            },
             orderBy: {
                 createdAt: 'asc',
             },
@@ -28,16 +38,34 @@ export class ProductsService {
             where: {
                 slug,
             },
+            include: {
+                variants: {
+                    where: {
+                        isActive: true,
+                    },
+                    orderBy: {
+                        grams: 'asc',
+                    },
+                },
+            },
         });
 
-        if (!product || !product.isActive)
+        if (!product || !product.isActive) {
             throw new NotFoundException('Product not found');
+        }
 
         return product;
     }
 
     findAllForAdmin() {
         return this.prisma.product.findMany({
+            include: {
+                variants: {
+                    orderBy: {
+                        grams: 'asc',
+                    },
+                },
+            },
             orderBy: {
                 createdAt: 'asc',
             },
@@ -55,6 +83,38 @@ export class ProductsService {
                     price: dto.price!,
                     type: dto.type!,
                     isActive: dto.isActive ?? true,
+                    variants: {
+                        create: [
+                            {
+                                size: ProductSize.SIZE_100G,
+                                label: '100g',
+                                grams: 100,
+                                price: dto.price!,
+                                isActive: true,
+                            },
+                            {
+                                size: ProductSize.SIZE_500G,
+                                label: '500g',
+                                grams: 500,
+                                price: dto.price! * 5,
+                                isActive: true,
+                            },
+                            {
+                                size: ProductSize.SIZE_1KG,
+                                label: '1kg',
+                                grams: 1000,
+                                price: dto.price! * 10,
+                                isActive: true,
+                            },
+                        ],
+                    },
+                },
+                include: {
+                    variants: {
+                        orderBy: {
+                            grams: 'asc',
+                        },
+                    },
                 },
             });
         } catch (error) {
@@ -76,7 +136,9 @@ export class ProductsService {
             },
         });
 
-        if (!product) throw new NotFoundException('Product not found');
+        if (!product) {
+            throw new NotFoundException('Product not found');
+        }
 
         try {
             return await this.prisma.product.update({
@@ -91,6 +153,13 @@ export class ProductsService {
                     price: dto.price,
                     type: dto.type,
                     isActive: dto.isActive,
+                },
+                include: {
+                    variants: {
+                        orderBy: {
+                            grams: 'asc',
+                        },
+                    },
                 },
             });
         } catch (error) {

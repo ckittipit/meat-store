@@ -11,6 +11,10 @@ export type OrderItem = {
     id: string
     orderId: string
     productId: string
+    productVariantId: string
+    productName: string
+    variantLabel: string
+    variantGrams: number
     quantity: number
     unitPrice: number
     subtotal: number

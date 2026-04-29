@@ -91,6 +91,7 @@ export default async function ProductPage() {
                                     </p>
                                     <div className="mt-4 flex items-center justify-between">
                                         <p className="tetx-xl font-bold text-[#8b5e3c]">
+                                            เริ่มต้น{' '}
                                             {product.price.toLocaleString(
                                                 'th-TH',
                                             )}{' '}

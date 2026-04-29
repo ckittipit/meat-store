@@ -80,7 +80,7 @@ export default async function ProductDetailPage({
                             {product.description}
                         </p>
                         <p className="mt-6 text-3xl font-bold text-[#8b5e3c]">
-                            {product.price.toLocaleString('th-TH')} บาท
+                            เริ่มต้น {product.price.toLocaleString('th-TH')} บาท
                         </p>
                         <div className="mt-6 rounded-3xl border border-[#f1e4d6] bg-white p-5 shadow-sm">
                             <h2 className="font-semibold text-[#2f2a25]">

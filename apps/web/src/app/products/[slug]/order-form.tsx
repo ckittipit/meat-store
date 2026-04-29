@@ -5,11 +5,12 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { api } from '@/lib/api'
-import type { Product } from '@/types/product'
+import type { Product, ProductVariant } from '@/types/product'
 import type { Order } from '@/types/order'
 
 const orderSchema = z.object({
-    quantity: z.number().int().min(1, 'จำนวนต้องมากกว่า 0'),
+    productVariantId: z.string().min(1, 'กรุณาเลือกขนาดสินค้า'),
+    quantity: z.coerce.number().int().min(1, 'จำนวนต้องมากกว่า 0'),
     customerName: z.string().min(2, 'กรุณากรอกชื่ออย่างน้อย 2 ตัวอักษร'),
     customerPhone: z
         .string()
@@ -25,6 +26,8 @@ type OrderFormProps = {
 }
 
 export function OrderForm({ product }: OrderFormProps) {
+    const defaultVariant = product.variants[0]
+
     const [createdOrder, setCreatedOrder] = useState<Order | null>(null)
     const [submitError, setSubmitError] = useState('')
 
@@ -33,10 +36,12 @@ export function OrderForm({ product }: OrderFormProps) {
         handleSubmit,
         watch,
         reset,
+        setValue,
         formState: { errors, isSubmitting },
     } = useForm<OrderFormValues>({
         resolver: zodResolver(orderSchema),
         defaultValues: {
+            productVariantId: defaultVariant?.id ?? '',
             quantity: 1,
             customerName: '',
             customerPhone: '',
@@ -44,11 +49,18 @@ export function OrderForm({ product }: OrderFormProps) {
         },
     })
 
+    const selectedVariantId = watch('productVariantId')
     const quantity = watch('quantity') || 1
 
+    const selectedVariant = useMemo<ProductVariant | undefined>(() => {
+        return product.variants.find(
+            (variant) => variant.id === selectedVariantId,
+        )
+    }, [product.variants, selectedVariantId])
+
     const totalAmount = useMemo(() => {
-        return product.price * Number(quantity || 0)
-    }, [product.price, quantity])
+        return (selectedVariant?.price ?? 0) * Number(quantity || 0)
+    }, [selectedVariant?.price, quantity])
 
     async function onSubmit(values: OrderFormValues) {
         setSubmitError('')
@@ -57,6 +69,7 @@ export function OrderForm({ product }: OrderFormProps) {
         try {
             const res = await api.post<Order>('/orders', {
                 productId: product.id,
+                productVariantId: values.productVariantId,
                 quantity: values.quantity,
                 customerName: values.customerName,
                 customerPhone: values.customerPhone,
@@ -65,6 +78,7 @@ export function OrderForm({ product }: OrderFormProps) {
 
             setCreatedOrder(res.data)
             reset({
+                productVariantId: defaultVariant?.id ?? '',
                 quantity: 1,
                 customerName: '',
                 customerPhone: '',
@@ -77,6 +91,19 @@ export function OrderForm({ product }: OrderFormProps) {
         }
     }
 
+    if (product.variants.length === 0) {
+        return (
+            <div className="mt-6 rounded-3xl border border-[#f1e4d6] bg-white p-5 shadow-sm">
+                <h2 className="text-xl font-bold text-[#2f2a25]">
+                    สินค้านี้ยังไม่มีขนาดให้เลือก
+                </h2>
+                <p className="mt-2 text-sm text-[#6f6258]">
+                    กรุณากลับมาใหม่ภายหลัง
+                </p>
+            </div>
+        )
+    }
+
     return (
         <div className="mt-6 rounded-3xl border border-[#f1e4d6] bg-white p-5 shadow-sm">
             <h2 className="text-xl font-bold text-[#2f2a25]">
@@ -87,6 +114,50 @@ export function OrderForm({ product }: OrderFormProps) {
             </p>
 
             <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
+                <div>
+                    <label className="text-sm font-medium text-[#2f2a25]">
+                        เลือกขนาด
+                    </label>
+
+                    <input type="hidden" {...register('productVariantId')} />
+
+                    <div className="mt-2 grid grid-cols-3 gap-3">
+                        {product.variants.map((variant) => {
+                            const isSelected = selectedVariantId === variant.id
+
+                            return (
+                                <button
+                                    key={variant.id}
+                                    type="button"
+                                    onClick={() =>
+                                        setValue('productVariantId', variant.id)
+                                    }
+                                    className={[
+                                        'rounded-2xl border px-4 py-3 text-left transition',
+                                        isSelected
+                                            ? 'border-[#ffd8b5] bg-[#fff7e8] ring-4 ring-[#ffd8b5]/30'
+                                            : 'border-[#f1e4d6] bg-white hover:bg-[#fffdf9]',
+                                    ].join(' ')}
+                                >
+                                    <p className="font-semibold text-[#2f2a25]">
+                                        {variant.label}
+                                    </p>
+                                    <p className="mt-1 text-sm text-[#8b5e3c]">
+                                        {variant.price.toLocaleString('th-TH')}{' '}
+                                        บาท
+                                    </p>
+                                </button>
+                            )
+                        })}
+                    </div>
+
+                    {errors.productVariantId && (
+                        <p className="mt-1 text-sm text-red-600">
+                            {errors.productVariantId.message}
+                        </p>
+                    )}
+                </div>
+
                 <div>
                     <label className="text-sm font-medium text-[#2f2a25]">
                         จำนวน
@@ -155,7 +226,11 @@ export function OrderForm({ product }: OrderFormProps) {
 
                 <div className="rounded-2xl bg-[#fff7e8] px-4 py-4">
                     <div className="flex items-center justify-between gap-4">
-                        <span className="text-sm text-[#6f6258]">ยอดรวม</span>
+                        <span className="text-sm text-[#6f6258]">
+                            {selectedVariant
+                                ? `${selectedVariant.label} x ${quantity || 0}`
+                                : 'ยอดรวม'}
+                        </span>
                         <span className="text-xl font-bold text-[#8b5e3c]">
                             {totalAmount.toLocaleString('th-TH')} บาท
                         </span>
