@@ -15,6 +15,7 @@ import { existsSync, mkdirSync } from 'fs';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { getUploadRoot } from '../common/upload-path';
 
 @Controller('products')
 export class ProductsController {
@@ -50,11 +51,7 @@ export class ProductsController {
         FileInterceptor('file', {
             storage: diskStorage({
                 destination: (_req, _file, callback) => {
-                    const uploadPath = join(
-                        process.cwd(),
-                        'uploads',
-                        'products',
-                    );
+                    const uploadPath = join(getUploadRoot(), 'products');
 
                     if (!existsSync(uploadPath))
                         mkdirSync(uploadPath, { recursive: true });

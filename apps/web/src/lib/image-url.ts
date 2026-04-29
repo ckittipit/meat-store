@@ -1,11 +1,25 @@
-export function getImageUrl(imageUrl: string) {
-    if (!imageUrl) return '/placeholder-product.svg'
+export function getImageUrl(imageUrl?: string | null) {
+    if (!imageUrl) {
+        return '/placeholder-product.svg'
+    }
 
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
         return imageUrl
+    }
 
-    if (imageUrl.startsWith('/uploads'))
-        return `${process.env.NEXT_PUBLIC_URL}${imageUrl}`
+    if (imageUrl.startsWith('/uploads')) {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL
 
-    return imageUrl
+        if (!apiUrl) {
+            return '/placeholder-product.svg'
+        }
+
+        return `${apiUrl}${imageUrl}`
+    }
+
+    if (imageUrl.startsWith('/')) {
+        return imageUrl
+    }
+
+    return '/placeholder-product.svg'
 }

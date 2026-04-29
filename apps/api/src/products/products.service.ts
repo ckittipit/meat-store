@@ -3,7 +3,7 @@ import {
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
-import { Prisma, ProductSize } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -84,29 +84,13 @@ export class ProductsService {
                     type: dto.type!,
                     isActive: dto.isActive ?? true,
                     variants: {
-                        create: [
-                            {
-                                size: ProductSize.SIZE_100G,
-                                label: '100g',
-                                grams: 100,
-                                price: dto.price!,
-                                isActive: true,
-                            },
-                            {
-                                size: ProductSize.SIZE_500G,
-                                label: '500g',
-                                grams: 500,
-                                price: dto.price! * 5,
-                                isActive: true,
-                            },
-                            {
-                                size: ProductSize.SIZE_1KG,
-                                label: '1kg',
-                                grams: 1000,
-                                price: dto.price! * 10,
-                                isActive: true,
-                            },
-                        ],
+                        create: dto.variants!.map((variant) => ({
+                            size: variant.size!,
+                            label: variant.label!,
+                            grams: variant.grams!,
+                            price: variant.price!,
+                            isActive: variant.isActive ?? true,
+                        })),
                     },
                 },
                 include: {
@@ -134,6 +118,9 @@ export class ProductsService {
             where: {
                 id,
             },
+            include: {
+                variants: true,
+            },
         });
 
         if (!product) {
@@ -141,26 +128,51 @@ export class ProductsService {
         }
 
         try {
-            return await this.prisma.product.update({
-                where: {
-                    id,
-                },
-                data: {
-                    name: dto.name,
-                    slug: dto.slug,
-                    description: dto.description,
-                    imageUrl: dto.imageUrl,
-                    price: dto.price,
-                    type: dto.type,
-                    isActive: dto.isActive,
-                },
-                include: {
-                    variants: {
-                        orderBy: {
-                            grams: 'asc',
+            return await this.prisma.$transaction(async (tx) => {
+                const updatedProduct = await tx.product.update({
+                    where: {
+                        id,
+                    },
+                    data: {
+                        name: dto.name,
+                        slug: dto.slug,
+                        description: dto.description,
+                        imageUrl: dto.imageUrl,
+                        price: dto.price,
+                        type: dto.type,
+                        isActive: dto.isActive,
+                    },
+                });
+
+                if (dto.variants) {
+                    for (const variant of dto.variants) {
+                        await tx.productVariant.update({
+                            where: {
+                                productId_size: {
+                                    productId: id,
+                                    size: variant.size,
+                                },
+                            },
+                            data: {
+                                price: variant.price,
+                                isActive: variant.isActive,
+                            },
+                        });
+                    }
+                }
+
+                return tx.product.findUniqueOrThrow({
+                    where: {
+                        id: updatedProduct.id,
+                    },
+                    include: {
+                        variants: {
+                            orderBy: {
+                                grams: 'asc',
+                            },
                         },
                     },
-                },
+                });
             });
         } catch (error) {
             if (

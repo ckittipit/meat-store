@@ -59,13 +59,18 @@ export default async function ProductDetailPage({
                 <div className="mt-8 grid gap-8 lg:grid-cols-2">
                     <div className="overflow-hidden rounded-3xl border border-[#f1e4d6] bg-white p-4 shadow-sm">
                         <div className="relative aspect-square overflow-hidden rounded-2xl bg-[#fff7e8]">
-                            <Image
+                            {/* <Image
                                 src={getImageUrl(product.imageUrl)}
                                 alt={product.name}
                                 fill
                                 priority
                                 sizes="(min-width: 1024px) 50vw, 100vw"
                                 className="object-cover"
+                            /> */}
+                            <img
+                                src={getImageUrl(product.imageUrl)}
+                                alt={product.name}
+                                className="h-full w-full object-cover"
                             />
                         </div>
                     </div>
