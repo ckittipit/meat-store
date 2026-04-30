@@ -7,10 +7,14 @@ import { OrderStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { calculateDeliveryRound } from './delivery.util';
+import { OrdersGateway } from './orders.gateway';
 
 @Injectable()
 export class OrdersService {
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly ordersGateway: OrdersGateway,
+    ) {}
 
     async createOrder(dto: CreateOrderDto) {
         const product = await this.prisma.product.findUnique({
@@ -41,7 +45,7 @@ export class OrdersService {
         const subtotal = unitPrice * dto.quantity;
         const delivery = calculateDeliveryRound();
 
-        return this.prisma.order.create({
+        const order = await this.prisma.order.create({
             data: {
                 customerName: dto.customerName,
                 customerPhone: dto.customerPhone,
@@ -72,6 +76,10 @@ export class OrdersService {
                 },
             },
         });
+
+        this.ordersGateway.emitNewOrder(order);
+
+        return order;
     }
 
     findAllForAdmin() {
@@ -99,7 +107,7 @@ export class OrdersService {
 
         if (!order) throw new NotFoundException('Order not found');
 
-        return this.prisma.order.update({
+        const updatedOrder = await this.prisma.order.update({
             where: {
                 id,
             },
@@ -115,5 +123,9 @@ export class OrdersService {
                 },
             },
         });
+
+        this.ordersGateway.emitOrderStatusUpdated(updatedOrder);
+
+        return updatedOrder;
     }
 }

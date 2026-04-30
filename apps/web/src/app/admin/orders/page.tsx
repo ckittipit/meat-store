@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '@/lib/api'
 import type { Order, OrderStatus } from '@/types/order'
+import { io, Socket } from 'socket.io-client'
 
 const orderStatuses: OrderStatus[] = [
     'NEW',
@@ -45,6 +46,10 @@ export default function AdminOrdersPage() {
     const [isLoading, setIsLoading] = useState(false)
     const [loadError, setLoadError] = useState('')
     const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null)
+
+    const [socketStatus, setSocketStatus] = useState<
+        'connecting' | 'connected' | 'disconnected'
+    >('disconnected')
 
     const summary = useMemo(() => {
         return {
@@ -97,6 +102,20 @@ export default function AdminOrdersPage() {
         }
     }
 
+    function upsertOrder(nextOrder: Order) {
+        setOrders((prevOrders) => {
+            const exists = prevOrders.some((order) => order.id === nextOrder.id)
+
+            if (exists) {
+                return prevOrders.map((order) =>
+                    order.id === nextOrder.id ? nextOrder : order,
+                )
+            }
+
+            return [nextOrder, ...prevOrders]
+        })
+    }
+
     useEffect(() => {
         let ignore = false
 
@@ -117,6 +136,69 @@ export default function AdminOrdersPage() {
 
         return () => {
             ignore = true
+        }
+    }, [])
+
+    useEffect(() => {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL
+
+        if (!apiUrl) return
+
+        const socket: Socket = io(apiUrl, {
+            transports: ['websocket'],
+            autoConnect: false,
+        })
+
+        socket.on('connect', () => {
+            setSocketStatus('connected')
+            socket.emit('admin_ping', {
+                message: 'admin orders page connected',
+            })
+        })
+
+        socket.on('disconnect', () => {
+            setSocketStatus('disconnected')
+        })
+
+        socket.on('connect_error', () => {
+            setSocketStatus('disconnected')
+        })
+
+        socket.on('admin_pong', (data) => {
+            console.log('Socket pong: ', data)
+        })
+
+        socket.on('new_order', (nextOrder: Order) => {
+            setOrders((prevOrders) => {
+                const exists = prevOrders.some(
+                    (order) => order.id === nextOrder.id,
+                )
+
+                if (exists) {
+                    return prevOrders.map((order) =>
+                        order.id === nextOrder.id ? nextOrder : order,
+                    )
+                }
+
+                return [nextOrder, ...prevOrders]
+            })
+        })
+
+        socket.on('order_status_updated', (nextOrder: Order) => {
+            setOrders((prevOrders) =>
+                prevOrders.map((order) =>
+                    order.id === nextOrder.id ? nextOrder : order,
+                ),
+            )
+        })
+
+        queueMicrotask(() => {
+            setSocketStatus('connecting')
+            socket.connect()
+        })
+
+        return () => {
+            socket.disconnect()
         }
     }, [])
 
