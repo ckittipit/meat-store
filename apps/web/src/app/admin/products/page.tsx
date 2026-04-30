@@ -2,7 +2,8 @@
 
 import Image from 'next/image'
 import { useEffect, useMemo, useState } from 'react'
-import { api } from '@/lib/api'
+// import { api } from '@/lib/api'
+import { adminApi } from '@/lib/admin-api'
 import { getImageUrl } from '@/lib/image-url'
 import type { Product, ProductSize, ProductType } from '@/types/product'
 
@@ -119,7 +120,7 @@ export default function AdminProductsPage() {
         setLoadError('')
 
         try {
-            const res = await api.get<Product[]>('/products/admin/all')
+            const res = await adminApi.get<Product[]>('/products')
             setProducts(res.data)
         } catch {
             setLoadError('โหลดสินค้าไม่สำเร็จ กรุณาลองใหม่อีกครั้ง')
@@ -135,7 +136,7 @@ export default function AdminProductsPage() {
 
         async function loadInitialProducts() {
             try {
-                const res = await api.get<Product[]>('/products/admin/all')
+                const res = await adminApi.get<Product[]>('/products')
 
                 if (!ignore) {
                     setProducts(res.data)
@@ -183,14 +184,9 @@ export default function AdminProductsPage() {
             const data = new FormData()
             data.append('file', file)
 
-            const res = await api.post<{ imageUrl: string }>(
-                '/products/admin/upload-image',
+            const res = await adminApi.post<{ imageUrl: string }>(
+                '/products/upload-image',
                 data,
-                {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                },
             )
 
             updateForm('imageUrl', res.data.imageUrl)
@@ -243,8 +239,8 @@ export default function AdminProductsPage() {
 
         try {
             if (isEditing && form.id) {
-                const res = await api.patch<Product>(
-                    `/products/admin/${form.id}`,
+                const res = await adminApi.patch<Product>(
+                    `/products/${form.id}`,
                     updatePayload,
                 )
 
@@ -254,8 +250,8 @@ export default function AdminProductsPage() {
                     ),
                 )
             } else {
-                const res = await api.post<Product>(
-                    '/products/admin',
+                const res = await adminApi.post<Product>(
+                    '/products',
                     createPayload,
                 )
                 setProducts((prev) => [...prev, res.data])
@@ -272,8 +268,8 @@ export default function AdminProductsPage() {
 
     async function toggleProductActive(product: Product) {
         try {
-            const res = await api.patch<Product>(
-                `/products/admin/${product.id}`,
+            const res = await adminApi.patch<Product>(
+                `/products/${product.id}`,
                 {
                     isActive: !product.isActive,
                 },

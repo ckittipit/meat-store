@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { api } from '@/lib/api'
+import { adminApi } from '@/lib/admin-api'
 import type { Order, OrderStatus } from '@/types/order'
 import { io, Socket } from 'socket.io-client'
 import { PushNotificationButton } from './push-notification-button'
@@ -71,7 +71,7 @@ export default function AdminOrdersPage() {
         setLoadError('')
 
         try {
-            const res = await api.get<Order[]>('/orders/admin')
+            const res = await adminApi.get<Order[]>('/orders')
             setOrders(res.data)
         } catch {
             setLoadError('โหลดรายการออร์เดอร์ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง')
@@ -84,8 +84,8 @@ export default function AdminOrdersPage() {
         setUpdatingOrderId(orderId)
 
         try {
-            const res = await api.patch<Order>(
-                `/orders/admin/${orderId}/status`,
+            const res = await adminApi.patch<Order>(
+                `/orders/${orderId}/status`,
                 {
                     status,
                 },
@@ -122,7 +122,7 @@ export default function AdminOrdersPage() {
 
         async function loadInitialOrders() {
             try {
-                const res = await api.get<Order[]>('/orders/admin')
+                const res = await adminApi.get<Order[]>('/orders')
 
                 if (!ignore) setOrders(res.data)
             } catch {

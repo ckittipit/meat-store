@@ -2,7 +2,8 @@
 
 import { getToken, onMessage } from 'firebase/messaging'
 import { useEffect, useState } from 'react'
-import { api } from '@/lib/api'
+// import { api } from '@/lib/api'
+import { adminApi } from '@/lib/admin-api'
 import { getFirebaseMessaging } from '@/lib/firebase'
 
 type PushStatus =
@@ -87,7 +88,7 @@ export function PushNotificationButton() {
                 return
             }
 
-            await api.post('/notifications/admin-token', {
+            await adminApi.post('/notifications/admin-token', {
                 token,
             })
 

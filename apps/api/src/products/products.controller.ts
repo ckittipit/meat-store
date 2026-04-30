@@ -7,6 +7,7 @@ import {
     Post,
     UploadedFile,
     UseInterceptors,
+    UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -16,6 +17,7 @@ import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { getUploadRoot } from '../common/upload-path';
+import { AdminApiKeyGuard } from 'src/auth/guards/admin-api-key-guard';
 
 @Controller('products')
 export class ProductsController {
@@ -27,6 +29,7 @@ export class ProductsController {
     }
 
     @Get('admin/all')
+    @UseGuards(AdminApiKeyGuard)
     findAllForAdmin() {
         return this.ProductsService.findAllForAdmin();
     }
@@ -37,16 +40,19 @@ export class ProductsController {
     }
 
     @Post('admin')
+    @UseGuards(AdminApiKeyGuard)
     createProduct(@Body() dto: CreateProductDto) {
         return this.ProductsService.createProduct(dto);
     }
 
     @Patch('admin/:id')
+    @UseGuards(AdminApiKeyGuard)
     updateProduct(@Param('id') id: string, @Body() dto: UpdateProductDto) {
         return this.ProductsService.updateProduct(id, dto);
     }
 
     @Post('admin/upload-image')
+    @UseGuards(AdminApiKeyGuard)
     @UseInterceptors(
         FileInterceptor('file', {
             storage: diskStorage({
