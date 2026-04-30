@@ -52,11 +52,22 @@ export class NotificationsService {
             readFileSync(fullPath, 'utf-8'),
         ) as FierbaseServiceAccount;
 
+        const projectId = this.configService.get<string>('FIREBASE_PROJECT_ID');
+        const clientEmail = this.configService.get<string>(
+            'FIREBASE_CLIENT_EMAIL',
+        );
+        const privateKey = this.configService
+            .get<string>('FIREBASE_PRIVATE_KEY')
+            ?.replace(/\\n/g, '\n');
+
         initializeApp({
             credential: cert({
-                projectId: serviceAccount.project_id,
-                clientEmail: serviceAccount.client_email,
-                privateKey: serviceAccount.private_key,
+                // projectId: serviceAccount.project_id,
+                // clientEmail: serviceAccount.client_email,
+                // privateKey: serviceAccount.private_key,
+                projectId,
+                clientEmail,
+                privateKey,
             }),
         });
     }
