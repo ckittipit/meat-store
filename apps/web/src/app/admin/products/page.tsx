@@ -289,7 +289,7 @@ export default function AdminProductsPage() {
 
     return (
         <main className="min-h-screen bg-[#fffdf9]">
-            <section className="mx-auto max-w-7xl px-4 py-10">
+            <section className="mx-auto max-w-7xl px-4 pb-10 pt-4">
                 <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                     <div>
                         <p className="text-sm font-medium text-[#8b5e3c]">
