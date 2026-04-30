@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { api } from '@/lib/api'
 import type { Order, OrderStatus } from '@/types/order'
 import { io, Socket } from 'socket.io-client'
+import { PushNotificationButton } from './push-notification-button'
 
 const orderStatuses: OrderStatus[] = [
     'NEW',
@@ -259,6 +260,10 @@ export default function AdminOrdersPage() {
                             {summary.delivering}
                         </p>
                     </div>
+                </div>
+
+                <div className="mt-6">
+                    <PushNotificationButton />
                 </div>
 
                 {loadError && (

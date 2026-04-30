@@ -30,3 +30,5 @@ docker-data
 
 # uploaded files
 apps/api/uploads
+
+apps/api/secrets

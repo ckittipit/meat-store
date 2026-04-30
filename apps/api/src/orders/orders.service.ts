@@ -8,12 +8,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { calculateDeliveryRound } from './delivery.util';
 import { OrdersGateway } from './orders.gateway';
+import { NotificationsService } from 'src/notifications/notifications.service';
 
 @Injectable()
 export class OrdersService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly ordersGateway: OrdersGateway,
+        private readonly notificationService: NotificationsService,
     ) {}
 
     async createOrder(dto: CreateOrderDto) {
@@ -78,6 +80,7 @@ export class OrdersService {
         });
 
         this.ordersGateway.emitNewOrder(order);
+        await this.notificationService.notifyAdminsNewOrder(order);
 
         return order;
     }

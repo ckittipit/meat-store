@@ -1,0 +1,6 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="192" height="192" rx="42" fill="#FFD8B5"/>
+    <circle cx="96" cy="80" r="38" fill="#FFFDF9"/>
+    <path d="M48 138C58 116 74 106 96 106C118 106 134 116 144 138" stroke="#8B5E3C" stroke-width="14" stroke-linecap="round"/>
+    <text x="96" y="170" text-anchor="middle" font-size="22" font-family="Arial" font-weight="700" fill="#5A351D">MEAT</text>
+</svg>
