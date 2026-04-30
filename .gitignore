@@ -25,10 +25,11 @@ yarn-error.log*
 # database / prisma local
 apps/api/prisma/dev.db
 
-# docker
-docker-data
-
 # uploaded files
-apps/api/uploads
+apps/api/uploads/*
+!apps/api/uploads/.gitkeep
+!apps/api/uploads/products/
+!apps/api/uploads/products/.gitkeep
 
+# secrets
 apps/api/secrets
